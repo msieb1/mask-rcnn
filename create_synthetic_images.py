@@ -37,7 +37,7 @@ class SyntheticImageGenerator(object):
         self.output_path = join(conf.EXP_DIR, 'synthetic_data', mode)
         print("write to: ",self.output_path)
         time.sleep(3)
-        self.relevant_ids = self.conf.BULLET_CLASS_IDS
+        self.relevant_ids = self.conf.CLASS_IDS
 
     def create_synthetic_images(self, n_iter=100):
         if not os.path.exists(self.output_path):
@@ -55,7 +55,7 @@ class SyntheticImageGenerator(object):
                 print("Base image: ", file_base)
 
                 # Overlay images to get synthetic image
-                img_overlayed, mask_overlayed, mask_labels, save_name = self.make_synthetic_image(file_base, added_list, n_added_images=randint(1, 2))
+                img_overlayed, mask_overlayed, mask_labels, save_name = self.make_synthetic_image(file_base, added_list, n_added_images=randint(3, 4))
 
                 # Save to file
                 print("saved as ", save_name )
@@ -69,7 +69,7 @@ class SyntheticImageGenerator(object):
 
                 k = cv2.waitKey(1)
 
-    def make_synthetic_image(self, file_base, list_of_img_paths, n_added_images=1):
+    def make_synthetic_image(self, file_base, list_of_img_paths, n_added_images=2):
 
         img_base = cv2.imread(join(self.rgb_path, file_base))  
         #img_base = cv2.cvtColor(img_base, cv2.COLOR_BGR2RGB) 
@@ -77,11 +77,11 @@ class SyntheticImageGenerator(object):
         # Store mask labels for later training, i.e. stores the corresponding object label for every mask channel
         mask_labels = []
         if file_base.endswith('.jpg'):
-            mask_base = np.load(join(self.mask_path, file_base.strip('.jpg') + '_mask.npy'))
-            save_name = file_base.strip('.jpg') 
+            mask_base = np.load(join(self.mask_path, file_base.split('.jpg')[0] + '.npy'))
+            save_name = file_base.split('.jpg')[0] 
         elif file_base.endswith('.png'):
-            mask_base = np.load(join(self.mask_path, file_base.strip('.png') + '_mask.npy'))
-            save_name = file_base.strip('.png')
+            mask_base = np.load(join(self.mask_path, file_base.split('.png')[0] + '.npy'))
+            save_name = file_base.split('.png')[0]
         else:
             print("provided invalid image format, only supports png or jpg")
             return
@@ -105,7 +105,15 @@ class SyntheticImageGenerator(object):
         if len(mask_overlayed.shape) < 3:
             mask_overlayed = mask_overlayed[:, :, np.newaxis]
         img_overlayed = copy(img_base)
-       
+
+        # Perturb background
+        scale = np.random.uniform(0.4,1.0)
+        img_perturbed = copy(img_overlayed)
+        img_perturbed = (img_perturbed * scale).astype(np.uint8)
+        img_perturbed[np.where(img_perturbed > 255)] = 255
+        img_perturbed[np.where(img_perturbed < 0)] = 0
+        img_overlayed = img_perturbed
+
         for i in range(n_added_images):
              # Read image to be added on top
             idx = randint(0, len(list_of_img_paths))
@@ -115,9 +123,9 @@ class SyntheticImageGenerator(object):
             img_added = cv2.imread(join(self.rgb_path, file_added))
             #img_added = cv2.cvtColor(img_added, cv2.COLOR_BGR2RGB) 
             if file_base.endswith('.jpg'):
-                mask_added = np.load(join(self.mask_path, file_added.strip('.jpg') + '_mask.npy'))
+                mask_added = np.load(join(self.mask_path, file_added.split('.jpg')[0] + '.npy'))
             else:
-                mask_added = np.load(join(self.mask_path, file_added.strip('.png') + '_mask.npy'))
+                mask_added = np.load(join(self.mask_path, file_added.split('.png')[0] + '.npy'))
             
             # Make binary masks
             mask_added_bin = np.zeros(mask_added.shape, dtype=np.uint8)
@@ -138,7 +146,7 @@ class SyntheticImageGenerator(object):
                                                             row_shift=randint(-self.conf.MAX_SHIFT_ROW, self.conf.MAX_SHIFT_ROW), \
                                                             col_shift=randint(-self.conf.MAX_SHIFT_COL, self.conf.MAX_SHIFT_COL))
             img_added_masked, mask_added_bin = self.rotate_mask(img_added_masked, mask_added_bin, \
-                                                            angle=randint(0,361,1), center=None, \
+                                                            angle=randint(-100,100,1), center=None, \
                                                             scale=np.random.uniform(0.4, 1.6))
             img_added_masked, mask_added_bin = self.perturb_intensity(img_added_masked, mask_added_bin, scale=np.random.uniform(0.7,1.0))
 
@@ -150,9 +158,9 @@ class SyntheticImageGenerator(object):
                                     mask_added_bin[:, :, np.newaxis]], axis=2)  
             # Save image and mask
             if file_base.endswith('.jpg'):
-                save_name += '_' + file_added.strip('.jpg') 
+                save_name += '_' + file_added.split('.jpg')[0] 
             else:
-                save_name += '_' + file_added.strip('.png') 
+                save_name += '_' + file_added.split('.png')[0] 
 
         save_name += '-0' 
         if os.path.exists(join(self.output_path, save_name + '.jpg')):

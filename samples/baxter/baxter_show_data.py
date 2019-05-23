@@ -14,10 +14,10 @@ import matplotlib.patches as patches
 import matplotlib.lines as lines
 from matplotlib.patches import Polygon
 
-from baxter import BaxterConfig, BaxterDataset, DATASET_DIR
+from baxter_iccv import BaxterConfig, BaxterDataset, DATASET_DIR
 from ipdb import set_trace
 # Root directory of the project
-ROOT_DIR = '/home/msieb/projects/Mask_RCNN/'
+ROOT_DIR = '/home/zhouxian/projects/Mask_RCNN/'
 if ROOT_DIR.endswith("samples/baxter"):
     # Go up two levels to the repo root
     ROOT_DIR = os.path.dirname(os.path.dirname(ROOT_DIR))

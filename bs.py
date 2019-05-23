@@ -39,6 +39,8 @@ BACKGROUND_DEPTH_1 = cv2.imread(join(ROOT_PATH, args.target, 'background/depth/0
 BACKGROUND_RGB_2 = cv2.imread(join(ROOT_PATH, args.target, 'background/videos/0_view2/00000.jpg')) 
 BACKGROUND_DEPTH_2 = cv2.imread(join(ROOT_PATH, args.target, 'background/depth/0_view2/00000.jpg'))
 
+
+
 def main(args):
     datapath = join(ROOT_PATH, args.target)
     # process_images(args.filepath)

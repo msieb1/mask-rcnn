@@ -21,7 +21,7 @@ import mrcnn.model as modellib
 from mrcnn import visualize
 from mrcnn.model import log
 
-from baxter import BaxterConfig, BaxterDataset, DATASET_DIR, MODEL_DIR
+from baxter_iccv import BaxterConfig, BaxterDataset, DATASET_DIR, MODEL_DIR
 from config import GeneralConfig
 gconf = GeneralConfig()
 
@@ -37,7 +37,7 @@ if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 def main(args):
     config = BaxterConfig()
@@ -64,20 +64,20 @@ def main(args):
 
     # Which weights to start with?
     init_with = args.init_with  # imagenet, coco, or last
-
-    if init_with == "imagenet":
-        model.load_weights(model.get_imagenet_weights(), by_name=True)
-    elif init_with == "coco":
-        # Load weights trained on MS COCO, but skip layers that
-        # are different due to the different number of classes
-        # See README for instructions to download the COCO weights
-        model.load_weights(COCO_MODEL_PATH, by_name=True,
-                           exclude=["mrcnn_class_logits", "mrcnn_bbox_fc", 
-                                    "mrcnn_bbox", "mrcnn_mask"])
-    elif init_with == "last":
-        # Load the last model you trained and continue training
-        model.load_weights(model.find_last(), by_name=True)
-    elif init_with == 'weights':
+    if args.old_model_path == '':
+        if init_with == "imagenet":
+            model.load_weights(model.get_imagenet_weights(), by_name=True)
+        elif init_with == "coco":
+            # Load weights trained on MS COCO, but skip layers that
+            # are different due to the different number of classes
+            # See README for instructions to download the COCO weights
+            model.load_weights(COCO_MODEL_PATH, by_name=True,
+                            exclude=["mrcnn_class_logits", "mrcnn_bbox_fc", 
+                                        "mrcnn_bbox", "mrcnn_mask"])
+        elif init_with == "last":
+            # Load the last model you trained and continue training
+            model.load_weights(model.find_last(), by_name=True)
+    else:
         model.load_weights(args.old_model_path, by_name=True)
     # elif init_with == 'retrain':
     #     model.load_weights(RETRAIN_MODEL_PATH, by_name=True)
@@ -86,11 +86,11 @@ def main(args):
     # Passing layers="heads" freezes all layers except the head
     # layers. You can also pass a regular expression to select
     # which layers to train by name pattern.
-    if OLD_MODEL_PATH is not None:
+    if args.old_model_path != '':
         print("Load old model and finetun")
         model.train(dataset_train, dataset_val, 
                     learning_rate=config.LEARNING_RATE / 10, 
-                    epochs=int((OLD_MODEL_PATH.split('_')[-1]).split('.')[0]) + args.n_epochs, 
+                    epochs=int((args.old_model_path.split('_')[-1]).split('.')[0]) + args.n_epochs, 
                     layers='heads')
                     # , augmentation=imgaug.augmenters.OneOf([
                             #imgaug.augmenters.Fliplr(0.5),
@@ -104,8 +104,7 @@ def main(args):
                     # , augmentation=imgaug.augmenters.OneOf([
                             #imgaug.augmenters.Fliplr(0.5),
                             #imgaug.augmenters.Flipud(0.5),
-                            #imgaug.augmenters.Affine(rotate=(-90, 90))])
-                                         
+                            #imgaug.augmenters.Affine(rotate=(-90, 90))])                                         
 
     # # Fine tune all layers
     # # Passing layers="all" trains all layers. You can also 
@@ -119,9 +118,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--n-epochs', type=int, default=100)
+    parser.add_argument('--n-epochs', type=int, default=1000)
     parser.add_argument('-i', '--init-with', type=str, default='coco')
-    parser.add_argument('-m', '--old-model-path', type=str, default=OLD_MODEL_PATH)
+    parser.add_argument('-m', '--old-model-path', type=str, default='')
 
     args = parser.parse_args()
     main(args)        

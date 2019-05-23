@@ -18,7 +18,7 @@ import scipy
 import skimage.color
 import skimage.io
 import skimage.transform
-# import urllib.request # uncomment if needed
+import urllib
 import shutil
 import warnings
 from PIL import Image

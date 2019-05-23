@@ -18,8 +18,8 @@ import cv2
 import matplotlib.pyplot as plt
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("/home/msieb/projects/Mask_RCNN/")
-DATASET_DIR = '/home/msieb/projects/Mask_RCNN/datasets/baxter'
+ROOT_DIR = os.path.abspath("/home/zhouxian/projects/Mask_RCNN/")
+DATASET_DIR = '/home/zhouxian/projects/Mask_RCNN/datasets/baxter'
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 # Import Mask RCNN
@@ -60,7 +60,11 @@ class BaxterConfig(Config):
 
     # Use a small epoch since the data is simple
     STEPS_PER_EPOCH = 100
-    BACKBONE = "resnet101"
+    BACKBONE = "resnet50"
+    MAX_GT_INSTANCES = 50
+    POST_NMS_ROIS_INFERENCE = 500
+    POST_NMS_ROIS_TRAINING = 1000
+    RPN_TRAIN_ANCHORS_PER_IMAGE = 512
     # use small validation steps since the epoch is small
     VALIDATION_STEPS = 5
     

@@ -29,7 +29,9 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
+*.jpg
+*.png
+*.h5
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
